@@ -187,6 +187,7 @@ require('lazy').setup({
 
   { -- Useful plugin to show you pending keybinds.
     'folke/which-key.nvim',
+    'https://github.com/tpope/vim-fugitive',
     event = 'VimEnter', -- Sets the loading event to 'VimEnter'
     opts = {
       icons = {
@@ -593,7 +594,6 @@ require('lazy').setup({
       }
     end,
   },
-
   { -- Autoformat
     'stevearc/conform.nvim',
     event = { 'BufWritePre' },
