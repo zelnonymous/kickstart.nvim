@@ -1,4 +1,4 @@
---https://github.com/a-h/templ Set <space> as the leader key
+-- Set <space> as the leader key
 -- See `:help mapleader`
 --  NOTE: Must happen before plugins are loaded (otherwise wrong leader will be used)
 vim.g.mapleader = ' '
@@ -9,7 +9,6 @@ vim.g.have_nerd_font = true
 
 -- [[ Setting options ]]
 -- See `:help vim.opt`
--- NOTE: You can change these options as you wish!
 --  For more options, you can see `:help option-list`
 vim.opt.tabstop = 4
 vim.opt.softtabstop = 4
@@ -90,12 +89,6 @@ vim.keymap.set('n', '<leader>q', vim.diagnostic.setloclist, { desc = 'Open diagn
 -- or just use <C-\><C-n> to exit terminal mode
 vim.keymap.set('t', '<Esc><Esc>', '<C-\\><C-n>', { desc = 'Exit terminal mode' })
 
--- TIP: Disable arrow keys in normal mode
--- vim.keymap.set('n', '<left>', '<cmd>echo "Use h to move!!"<CR>')
--- vim.keymap.set('n', '<right>', '<cmd>echo "Use l to move!!"<CR>')
--- vim.keymap.set('n', '<up>', '<cmd>echo "Use k to move!!"<CR>')
--- vim.keymap.set('n', '<down>', '<cmd>echo "Use j to move!!"<CR>')
-
 -- Keybinds to make split navigation easier.
 --  Use CTRL+<hjkl> to switch between windows
 --
@@ -104,6 +97,9 @@ vim.keymap.set('n', '<C-h>', '<C-w><C-h>', { desc = 'Move focus to the left wind
 vim.keymap.set('n', '<C-l>', '<C-w><C-l>', { desc = 'Move focus to the right window' })
 vim.keymap.set('n', '<C-j>', '<C-w><C-j>', { desc = 'Move focus to the lower window' })
 vim.keymap.set('n', '<C-k>', '<C-w><C-k>', { desc = 'Move focus to the upper window' })
+-- Quickfix navigation
+vim.keymap.set('n', '<leader>j', '<cmd>cn<CR>', { desc = 'Quickfix next' })
+vim.keymap.set('n', '<leader>k', '<cmd>cp<CR>', { desc = 'Quickfix previous' })
 
 -- [[ Basic Autocommands ]]
 --  See `:help lua-guide-autocommands`
@@ -161,13 +157,14 @@ require('lazy').setup({
   { -- Adds git related signs to the gutter, as well as utilities for managing changes
     'lewis6991/gitsigns.nvim',
     opts = {
-      signs = {
-        add = { text = '' },
-        change = { text = '' },
-        delete = { text = '󰆴' },
-        topdelete = { text = '󰠙' },
-        changedelete = { text = '󰗨' },
-      },
+      -- TODO: this is not working following updates.  Need to look into it.
+      --signs = {
+      --  add = { text = '' },
+      --  change = { text = '' },
+      --  delete = { text = '󰆴' },
+      --  topdelete = { text = '󰠙' },
+      --  changedelete = { text = '󰗨' },
+      --},
     },
   },
 
@@ -239,7 +236,101 @@ require('lazy').setup({
       },
     },
   },
+  {
+    'goolord/alpha-nvim',
+    dependencies = {
+      'nvim-tree/nvim-web-devicons',
+      'nvim-lua/plenary.nvim',
+    },
+    config = function()
+      local dashboard = require 'alpha.themes.dashboard'
+      local builtin = require 'telescope.builtin'
+      dashboard.section.buttons.val = {
+        dashboard.button('e', '  New file', '<cmd>enew<CR>'),
+        dashboard.button('Ctrl p', '󰱼  Search Files', builtin.find_files),
+      }
 
+      -- helper function for utf8 chars
+      local function getCharLen(s, pos)
+        local byte = string.byte(s, pos)
+        if not byte then
+          return nil
+        end
+        return (byte < 0x80 and 1) or (byte < 0xE0 and 2) or (byte < 0xF0 and 3) or (byte < 0xF8 and 4) or 1
+      end
+
+      local function applyColors(logo, colors, logoColors)
+        dashboard.section.header.val = logo
+
+        for key, color in pairs(colors) do
+          local name = 'Alpha' .. key
+          vim.api.nvim_set_hl(0, name, color)
+          colors[key] = name
+        end
+
+        dashboard.section.header.opts.hl = {}
+        for i, line in ipairs(logoColors) do
+          local highlights = {}
+          local pos = 0
+
+          for j = 1, #line do
+            local opos = pos
+            pos = pos + getCharLen(logo[i], opos + 1)
+
+            local color_name = colors[line:sub(j, j)]
+            if color_name then
+              table.insert(highlights, { color_name, opos, pos })
+            end
+          end
+
+          table.insert(dashboard.section.header.opts.hl, highlights)
+        end
+        return dashboard.opts
+      end
+
+      require('alpha').setup(applyColors({
+        [[  ███       ███  ]],
+        [[  ████      ████ ]],
+        [[  ████     █████ ]],
+        [[ █ ████    █████ ]],
+        [[ ██ ████   █████ ]],
+        [[ ███ ████  █████ ]],
+        [[ ████ ████ ████ ]],
+        [[ █████  ████████ ]],
+        [[ █████   ███████ ]],
+        [[ █████    ██████ ]],
+        [[ █████     █████ ]],
+        [[ ████      ████ ]],
+        [[  ███       ███  ]],
+        [[                    ]],
+        [[  N  E  O  V  I  M  ]],
+      }, {
+        ['b'] = { fg = '#3399ff', ctermfg = 33 },
+        ['a'] = { fg = '#53C670', ctermfg = 35 },
+        ['g'] = { fg = '#39ac56', ctermfg = 29 },
+        ['h'] = { fg = '#33994d', ctermfg = 23 },
+        ['i'] = { fg = '#33994d', bg = '#39ac56', ctermfg = 23, ctermbg = 29 },
+        ['j'] = { fg = '#53C670', bg = '#33994d', ctermfg = 35, ctermbg = 23 },
+        ['k'] = { fg = '#30A572', ctermfg = 36 },
+      }, {
+        [[  kkkka       gggg  ]],
+        [[  kkkkaa      ggggg ]],
+        [[ b kkkaaa     ggggg ]],
+        [[ bb kkaaaa    ggggg ]],
+        [[ bbb kaaaaa   ggggg ]],
+        [[ bbbb aaaaaa  ggggg ]],
+        [[ bbbbb aaaaaa igggg ]],
+        [[ bbbbb  aaaaaahiggg ]],
+        [[ bbbbb   aaaaajhigg ]],
+        [[ bbbbb    aaaaajhig ]],
+        [[ bbbbb     aaaaajhi ]],
+        [[ bbbbb      aaaaajh ]],
+        [[  bbbb       aaaaa  ]],
+        [[                    ]],
+        [[  a  a  a  b  b  b  ]],
+      }))
+    end,
+  },
   -- NOTE: Plugins can specify dependencies.
   --
   -- The dependencies are proper plugin specifications as well - anything
@@ -319,18 +410,23 @@ require('lazy').setup({
       vim.keymap.set('n', '<leader>sh', builtin.help_tags, { desc = '[S]earch [H]elp' })
       vim.keymap.set('n', '<leader>sk', builtin.keymaps, { desc = '[S]earch [K]eymaps' })
       vim.keymap.set('n', '<leader>sf', builtin.find_files, { desc = '[S]earch [F]iles' })
-      vim.keymap.set('n', '<leader>ss', builtin.builtin, { desc = '[S]earch [S]elect Telescope' })
+      vim.keymap.set('n', '<leader>st', builtin.builtin, { desc = '[S]earch Select [T]elescope' })
       vim.keymap.set('n', '<leader>sw', builtin.grep_string, { desc = '[S]earch current [W]ord' })
       vim.keymap.set('n', '<leader>sg', builtin.live_grep, { desc = '[S]earch by [G]rep' })
       vim.keymap.set('n', '<leader>sd', builtin.diagnostics, { desc = '[S]earch [D]iagnostics' })
       vim.keymap.set('n', '<leader>sr', builtin.resume, { desc = '[S]earch [R]esume' })
       vim.keymap.set('n', '<leader>s.', builtin.oldfiles, { desc = '[S]earch Recent Files ("." for repeat)' })
+      vim.keymap.set('n', '<leader>ss', builtin.lsp_document_symbols, { desc = '[S]earch Document [S]ymbols' })
       vim.keymap.set('n', '<leader><leader>', builtin.buffers, { desc = '[ ] Find existing buffers' })
+      vim.keymap.set('n', '<leader>sG', builtin.git_branches, { desc = '[S]earch [G]it' })
 
       -- Legacy keymaps from my old config I still trip over
       vim.keymap.set('n', '<C-p>', builtin.find_files, { desc = 'Search Files' })
       vim.keymap.set('n', '<leader>pf', builtin.find_files, { desc = 'Search Files' })
       vim.keymap.set('n', '<leader>pv', vim.cmd.Explore, { desc = 'Explore (netrw)' })
+      vim.keymap.set('n', '<leader>e', ':Neotree<CR>', { desc = '[E]xplore (Neo-tree)' })
+      vim.keymap.set('n', '<leader>h', ':Neotree toggle<CR>', { desc = '[H]ide Neotree' })
+
       -- Slightly advanced example of overriding default behavior and theme
       vim.keymap.set('n', '<leader>/', function()
         -- You can pass additional configuration to Telescope to change the theme, layout, etc.
@@ -369,6 +465,7 @@ require('lazy').setup({
       },
     },
   },
+
   { 'Bilal2453/luvit-meta', lazy = true },
   {
     -- Main LSP Configuration
@@ -473,7 +570,7 @@ require('lazy').setup({
           --
           -- When you move your cursor, the highlights will be cleared (the second autocommand).
           local client = vim.lsp.get_client_by_id(event.data.client_id)
-          if client and client.supports_method(vim.lsp.protocol.Methods.textDocument_documentHighlight) then
+          if client and client:supports_method(vim.lsp.protocol.Methods.textDocument_documentHighlight) then
             local highlight_augroup = vim.api.nvim_create_augroup('kickstart-lsp-highlight', { clear = false })
             vim.api.nvim_create_autocmd({ 'CursorHold', 'CursorHoldI' }, {
               buffer = event.buf,
@@ -500,7 +597,7 @@ require('lazy').setup({
           -- code, if the language server you are using supports them
           --
           -- This may be unwanted, since they displace some of your code
-          if client and client.supports_method(vim.lsp.protocol.Methods.textDocument_inlayHint) then
+          if client and client:supports_method(vim.lsp.protocol.Methods.textDocument_inlayHint) then
             map('<leader>th', function()
               vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled { bufnr = event.buf })
             end, '[T]oggle Inlay [H]ints')
@@ -836,6 +933,40 @@ require('lazy').setup({
     --    - Incremental selection: Included, see `:help nvim-treesitter-incremental-selection-mod`
     --    - Show your current context: https://github.com/nvim-treesitter/nvim-treesitter-context
     --    - Treesitter + textobjects: https://github.com/nvim-treesitter/nvim-treesitter-textobjects
+  },
+  {
+    'nvim-neo-tree/neo-tree.nvim',
+    branch = 'v3.x',
+    dependencies = {
+      'nvim-lua/plenary.nvim',
+      'nvim-tree/nvim-web-devicons', -- not strictly required, but recommended
+      'MunifTanjim/nui.nvim',
+      -- {"3rd/image.nvim", opts = {}}, -- Optional image support in preview window: See `# Preview Mode` for more information
+    },
+    lazy = false, -- neo-tree will lazily load itself
+    ---@module "neo-tree"
+    ---@type neotree.Config?
+    opts = {
+      -- fill any relevant options here
+    },
+    config = function()
+      require('neo-tree').setup {
+        sources = { 'filesystem', 'document_symbols', 'git_status' },
+        window = {
+          position = 'right',
+        },
+        filesystem = {
+          filtered_items = {
+            hide_dotfiles = false,
+            hide_gitignored = false,
+          },
+          follow_current_file = {
+            enabled = true,
+            leave_dirs_open = false,
+          },
+        },
+      }
+    end,
   },
 
   -- The following comments only work if you have downloaded the kickstart repo, not just copy pasted the
