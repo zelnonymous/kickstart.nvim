@@ -424,8 +424,9 @@ require('lazy').setup({
       vim.keymap.set('n', '<C-p>', builtin.find_files, { desc = 'Search Files' })
       vim.keymap.set('n', '<leader>pf', builtin.find_files, { desc = 'Search Files' })
       vim.keymap.set('n', '<leader>pv', vim.cmd.Explore, { desc = 'Explore (netrw)' })
-      vim.keymap.set('n', '<leader>e', ':Neotree<CR>', { desc = '[E]xplore (Neo-tree)' })
-      vim.keymap.set('n', '<leader>h', ':Neotree toggle<CR>', { desc = '[H]ide Neotree' })
+      -- Nootree binds conflict with fugitive and I ended up not liking it anyway
+      --vim.keymap.set('n', '<leader>e', ':Neotree<CR>', { desc = '[E]xplore (Neo-tree)' })
+      --vim.keymap.set('n', '<leader>h', ':Neotree toggle<CR>', { desc = '[H]ide Neotree' })
 
       -- Slightly advanced example of overriding default behavior and theme
       vim.keymap.set('n', '<leader>/', function()
@@ -857,6 +858,13 @@ require('lazy').setup({
     --
     -- If you want to see what colorschemes are already installed, you can use `:Telescope colorscheme`.
     'folke/tokyonight.nvim',
+    opts = {
+      transparent = true,
+      styles = {
+        sidebars = 'transparent',
+        floats = 'transparent',
+      },
+    },
     priority = 1000, -- Make sure to load this before all the other start plugins.
     init = function()
       -- Load the colorscheme here.
