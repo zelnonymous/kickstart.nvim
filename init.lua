@@ -419,6 +419,7 @@ require('lazy').setup({
       vim.keymap.set('n', '<leader>ss', builtin.lsp_document_symbols, { desc = '[S]earch Document [S]ymbols' })
       vim.keymap.set('n', '<leader><leader>', builtin.buffers, { desc = '[ ] Find existing buffers' })
       vim.keymap.set('n', '<leader>sG', builtin.git_branches, { desc = '[S]earch [G]it' })
+      vim.keymap.set('n', 'grr', builtin.lsp_references, { desc = '[S]earch [R]eferences' })
 
       -- Legacy keymaps from my old config I still trip over
       vim.keymap.set('n', '<C-p>', builtin.find_files, { desc = 'Search Files' })
